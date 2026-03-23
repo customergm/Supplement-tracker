@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="My Supplements">
+<title>Supplement Tracker</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#f2f2f7;--card:#fff;--card2:#f2f2f7;
+  --text:#1c1c1e;--text2:#3c3c43;--text3:#8e8e93;
+  --border:#c6c6c8;--border2:#e5e5ea;
+  --green:#34c759;--blue:#007aff;--orange:#ff9500;
+  --purple:#af52de;--red:#ff3b30;--teal:#32ade6;
+  --indigo:#5856d6;--pink:#ff2d55;
+  --green-bg:#f0fdf4;--blue-bg:#eff6ff;
+  --orange-bg:#fff7ed;--purple-bg:#faf5ff;
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#000;--card:#1c1c1e;--card2:#2c2c2e;
+  --text:#fff;--text2:#ebebf5;--text3:#ebebf599;
+  --border:#3a3a3c;--border2:#2c2c2e;
+  --green-bg:#052e16;--blue-bg:#0c1b33;
+  --orange-bg:#1c1108;--purple-bg:#1a0533;
+}}
+html,body{height:100%;background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;color:var(--text);overflow-x:hidden}
+.app{max-width:430px;margin:0 auto;min-height:100vh;background:var(--bg);padding-bottom:90px}
+.nav-bar{background:var(--card);border-bottom:0.5px solid var(--border2);padding:16px 20px 12px;position:sticky;top:0;z-index:100}
+.nav-bar h1{font-size:28px;font-weight:700;letter-spacing:-0.5px}
+.nav-bar .nav-sub{font-size:13px;color:var(--text3);margin-top:2px}
+.tab-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--card);border-top:0.5px solid var(--border2);display:flex;padding:8px 0 20px;z-index:100}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:4px 0;border:none;background:none;color:var(--text3);font-size:10px;font-weight:500;transition:color .15s}
+.tab.active{color:var(--blue)}
+.tab svg{width:24px;height:24px}
+.screen{display:none;padding:0 0 16px}
+.screen.active{display:block}
+.section-header{font-size:13px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;padding:20px 20px 8px}
+.card-group{background:var(--card);border-radius:12px;margin:0 16px 8px;overflow:hidden}
+.card-row{display:flex;align-items:center;padding:13px 16px;border-bottom:0.5px solid var(--border2);gap:12px;cursor:pointer;transition:background .1s;-webkit-user-select:none}
+.card-row:last-child{border-bottom:none}
+.card-row:active{background:var(--card2)}
+.row-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px}
+.row-content{flex:1;min-width:0}
+.row-title{font-size:16px;font-weight:400;color:var(--text);line-height:1.3}
+.row-sub{font-size:12px;color:var(--text3);margin-top:1px;line-height:1.3}
+.row-right{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.check-circle{width:24px;height:24px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
+.check-circle.done{background:var(--green);border-color:var(--green)}
+.check-circle svg{opacity:0;transition:opacity .15s}
+.check-circle.done svg{opacity:1}
+.badge{font-size:11px;font-weight:600;padding:2px 7px;border-radius:10px;background:var(--card2);color:var(--text3)}
+.badge.optional{background:#fff7ed;color:#92400e}
+.badge.weekly{background:#eff6ff;color:#1d4ed8}
+.badge.done-badge{background:#f0fdf4;color:#166534}
+.stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 16px;margin-bottom:8px}
+.stat-card{background:var(--card);border-radius:12px;padding:14px 12px;text-align:center}
+.stat-num{font-size:26px;font-weight:700;line-height:1}
+.stat-label{font-size:11px;color:var(--text3);margin-top:4px;font-weight:500}
+.progress-bar-wrap{margin:0 16px 8px;background:var(--card);border-radius:12px;padding:14px 16px}
+.pbar-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.pbar-title{font-size:14px;font-weight:500;color:var(--text)}
+.pbar-pct{font-size:14px;font-weight:600;color:var(--blue)}
+.pbar-bg{background:var(--border2);border-radius:4px;height:8px;overflow:hidden}
+.pbar-fill{height:100%;border-radius:4px;background:var(--blue);transition:width .4s ease}
+.week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;padding:0 16px;margin-bottom:16px}
+.day-dot{aspect-ratio:1;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-direction:column;cursor:pointer}
+.day-dot .dl{font-size:9px;font-weight:600;color:var(--text3);margin-bottom:2px}
+.day-dot .dn{font-size:13px;font-weight:600}
+.day-dot.today .dn{color:var(--blue)}
+.day-dot .fill{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:background .2s}
+.day-dot.full .fill{background:var(--green)}
+.day-dot.partial .fill{background:var(--orange)}
+.day-dot.empty .fill{background:var(--border2)}
+.day-dot.future .fill{background:transparent;border:1.5px dashed var(--border)}
+.day-dot .dn-white{font-size:12px;font-weight:700;color:#fff}
+.month-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;padding:0 16px;margin-bottom:8px}
+.m-day{aspect-ratio:1;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:var(--text3);background:var(--border2)}
+.m-day.full{background:var(--green);color:#fff;font-weight:700}
+.m-day.partial{background:var(--orange);color:#fff;font-weight:700}
+.m-day.today{outline:2px solid var(--blue)}
+.m-day.future{background:transparent;color:var(--border)}
+.m-day.empty-past{background:var(--card2);color:var(--border)}
+.lab-card{background:var(--card);border-radius:12px;margin:0 16px 8px;padding:14px 16px}
+.lab-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
+.lab-name{font-size:15px;font-weight:500;color:var(--text)}
+.lab-status{font-size:11px;font-weight:600;padding:3px 8px;border-radius:8px}
+.lab-status.above{background:#fff7ed;color:#92400e}
+.lab-status.ok{background:#f0fdf4;color:#166534}
+.lab-status.watch{background:#eff6ff;color:#1d4ed8}
+.lab-vals{display:flex;gap:16px;margin-bottom:8px}
+.lab-val{font-size:12px;color:var(--text3)}
+.lab-val span{font-weight:600;color:var(--text);font-size:13px}
+.lab-pbar-bg{background:var(--border2);border-radius:4px;height:6px;overflow:hidden;position:relative}
+.lab-pbar-fill{height:100%;border-radius:4px;transition:width .4s}
+.lab-target-line{position:absolute;top:0;bottom:0;width:2px;background:var(--green)}
+.note-area{background:var(--card);border-radius:12px;margin:0 16px 8px;padding:14px 16px}
+.note-area textarea{width:100%;border:none;background:transparent;color:var(--text);font-size:15px;font-family:inherit;resize:none;outline:none;line-height:1.5}
+.note-area textarea::placeholder{color:var(--text3)}
+.pill-row{display:flex;flex-wrap:wrap;gap:6px;padding:0 16px;margin-bottom:16px}
+.pill{font-size:12px;font-weight:500;padding:5px 12px;border-radius:20px;cursor:pointer;border:1.5px solid var(--border);color:var(--text2);background:var(--card);transition:all .15s}
+.pill.active{background:var(--blue);border-color:var(--blue);color:#fff}
+.empty-state{text-align:center;padding:40px 20px;color:var(--text3);font-size:14px}
+.streak-flame{font-size:32px;display:block;margin-bottom:8px}
+.reminder-card{background:var(--card);border-radius:12px;margin:0 16px 6px;padding:12px 16px;display:flex;align-items:center;gap:12px}
+.remind-time{font-size:15px;font-weight:600;color:var(--text);min-width:70px}
+.remind-items{flex:1}
+.remind-name{font-size:14px;color:var(--text);line-height:1.4}
+.remind-sub{font-size:11px;color:var(--text3);margin-top:1px}
+.remind-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:#1c1c1e;color:#fff;padding:10px 20px;border-radius:20px;font-size:14px;font-weight:500;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1}
+.banner{margin:16px 16px 0;background:var(--blue-bg);border:0.5px solid #93c5fd;border-radius:12px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start}
+.banner-icon{font-size:18px;flex-shrink:0;margin-top:1px}
+.banner-text{font-size:13px;color:#1d4ed8;line-height:1.5}
+.today-header{padding:16px 20px 8px;display:flex;justify-content:space-between;align-items:baseline}
+.today-date{font-size:22px;font-weight:700;letter-spacing:-0.3px}
+.today-sub{font-size:13px;color:var(--text3)}
+.complete-all-btn{background:var(--blue);color:#fff;border:none;border-radius:20px;font-size:13px;font-weight:600;padding:6px 14px;cursor:pointer;transition:opacity .15s}
+.complete-all-btn:active{opacity:.7}
+.mini-btn{background:var(--card2);color:var(--text);border:1px solid var(--border2);border-radius:10px;padding:8px 12px;font-size:13px;font-weight:600;cursor:pointer}
+.mini-btn:active{opacity:.75}
+.cloud-panel{background:var(--card);border-radius:12px;padding:14px 16px}
+.cloud-panel-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px}
+.cloud-panel-sub{font-size:12px;color:var(--text3);line-height:1.45}
+.cloud-grid{display:grid;grid-template-columns:1fr;gap:8px;margin-top:10px}
+.cloud-input{width:100%;border:1px solid var(--border2);background:var(--card2);color:var(--text);border-radius:10px;padding:11px 12px;font-size:14px;outline:none}
+.cloud-status{margin-top:10px;font-size:12px;color:var(--text3);line-height:1.45}
+.sync-pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:var(--card2);border-radius:999px;font-size:12px;color:var(--text3);margin-top:8px}
+.sync-dot{width:8px;height:8px;border-radius:50%;background:#8e8e93}
+.sync-dot.on{background:#34c759}
+.sync-dot.off{background:#ff9500}
+
+</style>
+</head>
+<body>
+<div class="app">
+
+<div id="screen-today" class="screen active">
+  <div class="nav-bar">
+    <h1>Good morning, Gargi</h1>
+    <div class="nav-sub" id="today-subtitle">Loading...</div>
+    <div class="sync-pill"><span id="sync-dot" class="sync-dot off"></span><span id="sync-label">Local only</span></div>
+  </div>
+  
+  <div style="padding:12px 16px 0">
+    <div style="background:var(--card);border-radius:12px;padding:12px 14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <button class="mini-btn" onclick="exportCSV()">Export CSV</button>
+      <button class="mini-btn" onclick="exportJSON()">Backup</button>
+      <label class="mini-btn" for="import-json-input" style="cursor:pointer">Import Backup</label>
+      <input id="import-json-input" type="file" accept="application/json" style="display:none" onchange="importJSON(event)">
+      <button class="mini-btn" onclick="toggleCloudPanel()">Cloud Sync</button>
+      <button class="mini-btn" onclick="syncNow()">Sync now</button>
+      <div style="font-size:12px;color:var(--text3);line-height:1.4">Use <strong>Export CSV</strong> for spreadsheet download. Use <strong>Backup/Import</strong> to move data between iPhone and Mac. Use <strong>Cloud Sync</strong> for automatic linking across devices.</div>
+    </div>
+  </div>
+  <div id="cloud-panel-wrap" style="padding:12px 16px 0;display:none">
+    <div class="cloud-panel">
+      <div class="cloud-panel-title">Cloud sync setup</div>
+      <div class="cloud-panel-sub">Paste the same settings on your Mac and iPhone. Anyone with these values could access your tracker, so keep them private.</div>
+      <div class="cloud-grid">
+        <input id="cloud-url" class="cloud-input" placeholder="Supabase Project URL">
+        <input id="cloud-anon-key" class="cloud-input" placeholder="Supabase anon key">
+        <input id="cloud-sync-key" class="cloud-input" placeholder="Shared sync key (make this long)">
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+        <button class="mini-btn" onclick="saveCloudConfig()">Save cloud settings</button>
+        <button class="mini-btn" onclick="clearCloudConfig()">Clear cloud settings</button>
+      </div>
+      <div id="cloud-status" class="cloud-status">Cloud sync not configured</div>
+    </div>
+  </div>
+
+  <div id="today-content"></div>
+</div>
+
+<div id="screen-history" class="screen">
+  <div class="nav-bar">
+    <h1>Progress</h1>
+    <div class="nav-sub">Your 3-month journey</div>
+  </div>
+  <div id="history-content"></div>
+</div>
+
+<div id="screen-labs" class="screen">
+  <div class="nav-bar">
+    <h1>Lab targets</h1>
+    <div class="nav-sub">June 2026 recheck</div>
+  </div>
+  <div id="labs-content"></div>
+</div>
+
+<div id="screen-reminders" class="screen">
+  <div class="nav-bar">
+    <h1>Schedule</h1>
+    <div class="nav-sub">Daily supplement timing</div>
+  </div>
+  <div id="reminders-content"></div>
+</div>
+
+<div class="tab-bar">
+  <button class="tab active" onclick="switchTab('today')" id="tab-today">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="9" y1="15" x2="10" y2="15"/><polyline points="10,14 11,15 14,12"/></svg>
+    Today
+  </button>
+  <button class="tab" onclick="switchTab('history')" id="tab-history">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    Progress
+  </button>
+  <button class="tab" onclick="switchTab('labs')" id="tab-labs">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v11"/><path d="M3 9a9 9 0 1 0 18 0"/></svg>
+    Labs
+  </button>
+  <button class="tab" onclick="switchTab('reminders')" id="tab-reminders">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+    Schedule
+  </button>
+</div>
+
+<div class="toast" id="toast"></div>
+</div>
+
+<script>
+const SUPPLEMENTS = [
+  {id:'b12', name:'Methyl B-12 sublingual', sub:'1 lozenge — dissolve under tongue', time:'7:00 AM', color:'#5856d6', bg:'#f5f3ff', icon:'B12', optional:false, weekly:false},
+  {id:'nutrafol', name:'Nutrafol Women\'s Balance', sub:'2 capsules with breakfast', time:'7:30 AM', color:'#ff9500', bg:'#fff7ed', icon:'NF', optional:false, weekly:false},
+  {id:'shatavari_am', name:'Shatavari', sub:'1 capsule after breakfast', time:'7:30 AM', color:'#34c759', bg:'#f0fdf4', icon:'Sh', optional:false, weekly:false},
+  {id:'shatavari_mid', name:'Shatavari', sub:'1 capsule after 11 AM snack', time:'11:00 AM', color:'#34c759', bg:'#f0fdf4', icon:'Sh', optional:false, weekly:false},
+  {id:'omega3', name:'Algae Omega-3', sub:'2 soft gels mid main meal', time:'3–4 PM', color:'#007aff', bg:'#eff6ff', icon:'O3', optional:false, weekly:false},
+  {id:'happycaps_pm', name:'Happy Caps', sub:'1 capsule after main meal', time:'3–4 PM', color:'#af52de', bg:'#faf5ff', icon:'HC', optional:false, weekly:false},
+  {id:'shatavari_pm', name:'Shatavari', sub:'1 capsule after main meal', time:'3–4 PM', color:'#34c759', bg:'#f0fdf4', icon:'Sh', optional:false, weekly:false},
+  {id:'gasex', name:'GasEx', sub:'1 tablet after evening meal', time:'7:00 PM', color:'#ff9500', bg:'#fff7ed', icon:'GE', optional:true, weekly:false},
+  {id:'happycaps_bed', name:'Happy Caps', sub:'1 capsule before sleep', time:'Bedtime', color:'#af52de', bg:'#faf5ff', icon:'HC', optional:false, weekly:false},
+  {id:'magnesium', name:'Magnesium glycinate', sub:'2 tablets 30–60 min before sleep', time:'Bedtime', color:'#32ade6', bg:'#ecfeff', icon:'Mg', optional:false, weekly:false},
+  {id:'vitamind', name:'Rx Vitamin D 50,000 IU', sub:'1 capsule weekly — pick a day', time:'Weekly', color:'#ff9500', bg:'#fff7ed', icon:'D', optional:false, weekly:true},,
+  {id:'sugar_destroyer_morning', name:'Sugar Destroyer (Morning - before meal)', optional:false},
+  {id:'sugar_destroyer_midmorning', name:'Sugar Destroyer (Mid-morning - before meal)', optional:false},
+  {id:'sugar_destroyer_afternoon', name:'Sugar Destroyer (Afternoon - before meal)', optional:false},
+
+];
+
+const NON_OPTIONAL = SUPPLEMENTS.filter(s=>!s.optional&&!s.weekly).length;
+const START_DATE = new Date('2026-03-23');
+
+function todayKey(){
+  const d=new Date();
+  return d.toISOString().split('T')[0];
+}
+
+function dateKey(d){
+  return d.toISOString().split('T')[0];
+}
+
+function formatDate(d){
+  return d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+}
+
+function formatDateShort(d){
+  return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+}
+
+
+
+const DATA = {};
+const CLOUD_CONFIG_KEY = 'cloud-sync-config-v1';
+const SAVE_TIMERS = {};
+
+function getCloudConfig(){
+  try{
+    const raw = localStorage.getItem(CLOUD_CONFIG_KEY);
+    return raw ? JSON.parse(raw) : {url:'', anonKey:'', syncKey:''};
+  }catch(e){
+    return {url:'', anonKey:'', syncKey:''};
+  }
+}
+
+function setCloudConfig(cfg){
+  localStorage.setItem(CLOUD_CONFIG_KEY, JSON.stringify(cfg));
+  updateCloudUI();
+}
+
+function cloudReady(){
+  const cfg = getCloudConfig();
+  return !!(cfg.url && cfg.anonKey && cfg.syncKey);
+}
+
+function cloudHeaders(){
+  const cfg = getCloudConfig();
+  return {
+    'apikey': cfg.anonKey,
+    'Authorization': 'Bearer ' + cfg.anonKey,
+    'Content-Type': 'application/json',
+    'Prefer': 'resolution=merge-duplicates'
+  };
+}
+
+function normalizeCloudUrl(url){
+  return (url || '').trim().replace(/\/+$/,'');
+}
+
+function toggleCloudPanel(){
+  const el = document.getElementById('cloud-panel-wrap');
+  if(!el) return;
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+function updateCloudUI(extraMsg){
+  const cfg = getCloudConfig();
+  const urlEl = document.getElementById('cloud-url');
+  const keyEl = document.getElementById('cloud-anon-key');
+  const syncEl = document.getElementById('cloud-sync-key');
+  const statusEl = document.getElementById('cloud-status');
+  const dot = document.getElementById('sync-dot');
+  const label = document.getElementById('sync-label');
+
+  if(urlEl) urlEl.value = cfg.url || '';
+  if(keyEl) keyEl.value = cfg.anonKey || '';
+  if(syncEl) syncEl.value = cfg.syncKey || '';
+
+  if(cloudReady()){
+    if(statusEl) statusEl.textContent = extraMsg || 'Cloud sync configured. Tap "Sync now" after saving on each device.';
+    if(dot){ dot.className = 'sync-dot on'; }
+    if(label){ label.textContent = 'Cloud sync on'; }
+  }else{
+    if(statusEl) statusEl.textContent = extraMsg || 'Cloud sync not configured';
+    if(dot){ dot.className = 'sync-dot off'; }
+    if(label){ label.textContent = 'Local only'; }
+  }
+}
+
+function saveCloudConfig(){
+  const cfg = {
+    url: normalizeCloudUrl(document.getElementById('cloud-url')?.value || ''),
+    anonKey: (document.getElementById('cloud-anon-key')?.value || '').trim(),
+    syncKey: (document.getElementById('cloud-sync-key')?.value || '').trim()
+  };
+  setCloudConfig(cfg);
+  showToast(cloudReady() ? 'Cloud settings saved' : 'Fill all 3 cloud fields');
+}
+
+function clearCloudConfig(){
+  setCloudConfig({url:'', anonKey:'', syncKey:''});
+  showToast('Cloud settings cleared');
+}
+
+async function cloudUpsertDay(key){
+  if(!cloudReady()) return;
+  const cfg = getCloudConfig();
+  const day = DATA[key] || await loadDay(key);
+  const note = getSavedNote(key);
+  const payload = [{
+    sync_key: cfg.syncKey,
+    day_key: key,
+    data: day || {},
+    note: note || '',
+    updated_at: new Date().toISOString()
+  }];
+  const res = await fetch(cfg.url + '/rest/v1/supplement_days', {
+    method: 'POST',
+    headers: cloudHeaders(),
+    body: JSON.stringify(payload)
+  });
+  if(!res.ok){
+    const txt = await res.text().catch(()=> '');
+    throw new Error('Cloud save failed: ' + res.status + ' ' + txt);
+  }
+}
+
+function queueCloudSave(key){
+  clearTimeout(SAVE_TIMERS[key]);
+  SAVE_TIMERS[key] = setTimeout(async()=>{
+    try{
+      await cloudUpsertDay(key);
+      updateCloudUI('Cloud synced just now');
+    }catch(e){
+      console.error(e);
+      updateCloudUI('Cloud save error. Check settings or Supabase table setup.');
+    }
+  }, 500);
+}
+
+async function syncFromCloud(){
+  if(!cloudReady()) return false;
+  const cfg = getCloudConfig();
+  const url = cfg.url + '/rest/v1/supplement_days?sync_key=eq.' + encodeURIComponent(cfg.syncKey) + '&select=day_key,data,note,updated_at&order=day_key.asc';
+  const res = await fetch(url, {
+    headers: {
+      'apikey': cfg.anonKey,
+      'Authorization': 'Bearer ' + cfg.anonKey
+    }
+  });
+  if(!res.ok){
+    const txt = await res.text().catch(()=> '');
+    throw new Error('Cloud fetch failed: ' + res.status + ' ' + txt);
+  }
+  const rows = await res.json();
+  for(const row of rows){
+    const k = row.day_key;
+    const data = row.data || {};
+    const note = row.note || '';
+    localStorage.setItem('day:' + k, JSON.stringify(data));
+    localStorage.setItem('note:' + k, note);
+    DATA[k] = data;
+    DATA['note:' + k] = note;
+  }
+  updateCloudUI(rows.length ? ('Loaded ' + rows.length + ' cloud day' + (rows.length===1 ? '' : 's')) : 'Cloud connected. No cloud data yet.');
+  return true;
+}
+
+async function syncNow(){
+  if(!cloudReady()){
+    toggleCloudPanel();
+    updateCloudUI('Enter your Supabase URL, anon key, and shared sync key first.');
+    showToast('Add cloud settings first');
+    return;
+  }
+  try{
+    await syncFromCloud();
+    await renderToday();
+    await renderHistory();
+    showToast('Sync complete');
+  }catch(e){
+    console.error(e);
+    updateCloudUI('Sync failed. Check Supabase URL, anon key, table, and policies.');
+    showToast('Sync failed');
+  }
+}
+
+async function loadDay(key){
+  if(DATA[key]) return DATA[key];
+  try{
+    const raw = localStorage.getItem('day:'+key);
+    DATA[key] = raw ? JSON.parse(raw) : {};
+  }catch(e){
+    DATA[key] = {};
+  }
+  return DATA[key];
+}
+
+async function saveDay(key, obj){
+  DATA[key]=obj;
+  try{
+    localStorage.setItem('day:'+key, JSON.stringify(obj));
+  }catch(e){}
+  queueCloudSave(key);
+}
+
+function getSavedNote(key){
+  if(Object.prototype.hasOwnProperty.call(DATA, 'note:'+key)) return DATA['note:'+key] || '';
+  try{
+    const raw = localStorage.getItem('note:'+key) || '';
+    DATA['note:'+key] = raw;
+    return raw;
+  }catch(e){
+    return '';
+  }
+}
+
+function getAllStoredData(){
+  const days = {};
+  const notes = {};
+  try{
+    for(let i=0;i<localStorage.length;i++){
+      const k = localStorage.key(i);
+      if(!k) continue;
+      const v = localStorage.getItem(k);
+      if(k.startsWith('day:')){
+        const dayKey = k.slice(4);
+        try{ days[dayKey] = v ? JSON.parse(v) : {}; }catch(e){ days[dayKey] = {}; }
+      }else if(k.startsWith('note:')){
+        notes[k.slice(5)] = v || '';
+      }
+    }
+  }catch(e){}
+  return {days, notes};
+}
+
+function downloadText(filename, text, mimeType){
+  const blob = new Blob([text], {type: mimeType});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function exportJSON(){
+  const payload = {
+    app: 'Gargi Supplement Tracker',
+    exportedAt: new Date().toISOString(),
+    supplements: SUPPLEMENTS.map(s => ({id:s.id, name:s.name, optional:s.optional, weekly:s.weekly})),
+    cloudConfigPresent: cloudReady(),
+    ...getAllStoredData()
+  };
+  downloadText(`gargi-supplement-backup-${todayKey()}.json`, JSON.stringify(payload, null, 2), 'application/json');
+  showToast('Backup downloaded');
+}
+
+function exportCSV(){
+  const {days, notes} = getAllStoredData();
+  const ids = SUPPLEMENTS.map(s => s.id);
+  const header = ['date', ...ids, 'core_done_count', 'core_completion_pct', 'note'];
+  const dayKeys = Object.keys(days);
+  const noteKeys = Object.keys(notes);
+  const keys = Array.from(new Set([...dayKeys, ...noteKeys])).sort();
+  if(keys.length === 0){
+    showToast('No data yet to export');
+    return;
+  }
+  const rows = [header];
+  for(const key of keys){
+    const day = days[key] || {};
+    const coreDone = SUPPLEMENTS.filter(s => !s.optional && !s.weekly && day[s.id]).length;
+    const pct = Math.round((coreDone / NON_OPTIONAL) * 100);
+    const row = [key];
+    for(const id of ids){
+      row.push(day[id] ? '1' : '0');
+    }
+    row.push(String(coreDone), String(pct), (notes[key] || '').replace(/
+?
+/g, ' '));
+    rows.push(row);
+  }
+  const csv = rows.map(row => row.map(value => {
+    const s = String(value ?? '');
+    return /[",
+]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  }).join(',')).join('
+');
+  downloadText(`gargi-supplement-tracker-${todayKey()}.csv`, csv, 'text/csv;charset=utf-8');
+  showToast('CSV exported');
+}
+
+async function importJSON(event){
+  const file = event.target.files && event.target.files[0];
+  if(!file) return;
+  try{
+    const text = await file.text();
+    const payload = JSON.parse(text);
+    const days = payload.days || {};
+    const notes = payload.notes || {};
+    for(const [key, value] of Object.entries(days)){
+      localStorage.setItem('day:'+key, JSON.stringify(value || {}));
+      DATA[key] = value || {};
+    }
+    for(const [key, value] of Object.entries(notes)){
+      localStorage.setItem('note:'+key, value || '');
+      DATA['note:'+key] = value || '';
+      if(cloudReady()) queueCloudSave(key);
+    }
+    event.target.value = '';
+    await preloadRecent();
+    await renderToday();
+    await renderHistory();
+    showToast('Backup imported');
+  }catch(e){
+    console.error(e);
+    showToast('Import failed');
+  }
+}
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),1800);
+}
+
+function getStreak(){
+  let streak=0;
+  const today=new Date();
+  for(let i=0;i<180;i++){
+    const d=new Date(today);
+    d.setDate(d.getDate()-i);
+    const k=dateKey(d);
+    const day=DATA[k]||{};
+    const done=SUPPLEMENTS.filter(s=>!s.optional&&!s.weekly&&day[s.id]).length;
+    if(done>=NON_OPTIONAL){streak++;} else if(i>0){break;}
+    else{break;}
+  }
+  return streak;
+}
+
+async function preloadRecent(){
+  const today=new Date();
+  for(let i=0;i<90;i++){
+    const d=new Date(today);
+    d.setDate(d.getDate()-i);
+    await loadDay(dateKey(d));
+  }
+}
+
+async function renderToday(){
+  const key=todayKey();
+  const day=await loadDay(key);
+  const today=new Date();
+  const doneCount=SUPPLEMENTS.filter(s=>!s.optional&&!s.weekly&&day[s.id]).length;
+  const pct=Math.round(doneCount/NON_OPTIONAL*100);
+
+  document.getElementById('today-subtitle').textContent=formatDate(today);
+
+  let html='';
+
+  html+=`<div style="padding:12px 16px 0">`;
+  html+=`<div style="background:var(--card);border-radius:12px;padding:14px 16px">`;
+  html+=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">`;
+  html+=`<span style="font-size:14px;font-weight:500;color:var(--text)">Today's progress</span>`;
+  html+=`<span style="font-size:16px;font-weight:700;color:${pct===100?'#34c759':'#007aff'}">${pct}%</span>`;
+  html+=`</div>`;
+  html+=`<div class="pbar-bg"><div class="pbar-fill" style="width:${pct}%;background:${pct===100?'#34c759':'#007aff'}"></div></div>`;
+  html+=`<div style="display:flex;justify-content:space-between;margin-top:8px">`;
+  html+=`<span style="font-size:12px;color:var(--text3)">${doneCount} of ${NON_OPTIONAL} core supplements taken</span>`;
+  if(pct===100) html+=`<span style="font-size:12px;font-weight:600;color:#34c759">Complete!</span>`;
+  html+=`</div></div></div>`;
+
+  const biotin_note = !day['nutrafol'] && isLabsWeek() ? 
+    `<div class="banner"><div class="banner-icon">!</div><div class="banner-text"><strong>Lab draw coming up</strong> — Stop Nutrafol 4 days before your blood draw. Biotin affects TSH and B12 results.</div></div>` : '';
+  html += biotin_note;
+
+  const groups=[
+    {label:'Morning', ids:['b12','nutrafol','shatavari_am']},
+    {label:'Mid-morning', ids:['shatavari_mid']},
+    {label:'Afternoon — with main meal', ids:['omega3','happycaps_pm','shatavari_pm']},
+    {label:'Evening', ids:['gasex']},
+    {label:'Bedtime', ids:['happycaps_bed','magnesium']},
+    {label:'Weekly', ids:['vitamind']},
+  ];
+
+  for(const grp of groups){
+    const supps=grp.ids.map(id=>SUPPLEMENTS.find(s=>s.id===id)).filter(Boolean);
+    if(!supps.length) continue;
+    html+=`<div class="section-header">${grp.label}</div>`;
+    html+=`<div class="card-group">`;
+    for(const s of supps){
+      const done=!!day[s.id];
+      html+=`<div class="card-row" onclick="toggle('${s.id}')">`;
+      html+=`<div class="row-icon" style="background:${s.bg};color:${s.color};font-size:11px;font-weight:700">${s.icon}</div>`;
+      html+=`<div class="row-content">`;
+      html+=`<div class="row-title" style="${done?'color:var(--text3);text-decoration:line-through':''}">${s.name}</div>`;
+      html+=`<div class="row-sub">${s.sub}</div>`;
+      html+=`</div>`;
+      html+=`<div class="row-right">`;
+      if(s.optional) html+=`<span class="badge optional">optional</span>`;
+      if(s.weekly) html+=`<span class="badge weekly">weekly</span>`;
+      html+=`<div class="check-circle${done?' done':''}">`;
+      html+=`<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+      html+=`</div></div></div>`;
+    }
+    html+=`</div>`;
+  }
+
+  html+=`<div class="section-header">Day notes</div>`;
+  html+=`<div class="note-area"><textarea id="day-note" rows="3" placeholder="How are you feeling today? Any side effects, energy levels, sleep quality...">${getSavedNote(key)}</textarea></div>`;
+
+  document.getElementById('today-content').innerHTML=html;
+
+  document.getElementById('day-note').addEventListener('change', async(e)=>{
+    DATA['note:'+key]=e.target.value;
+    try{localStorage.setItem('note:'+key, e.target.value);}catch(ex){}
+    queueCloudSave(key);
+  });
+}
+
+function isLabsWeek(){
+  const today=new Date();
+  const june15=new Date('2026-06-15');
+  const diff=(june15-today)/(1000*60*60*24);
+  return diff<=7 && diff>=0;
+}
+
+async function renderHistory(){
+  await preloadRecent();
+  const today=new Date();
+  const streak=getStreak();
+
+  let totalDone=0, totalDays=0;
+  const daysSinceStart=Math.floor((today-START_DATE)/(1000*60*60*24));
+  for(let i=0;i<=Math.min(daysSinceStart,89);i++){
+    const d=new Date(today);d.setDate(d.getDate()-i);
+    const k=dateKey(d);
+    const day=DATA[k]||{};
+    const done=SUPPLEMENTS.filter(s=>!s.optional&&!s.weekly&&day[s.id]).length;
+    if(done>0){totalDone+=done;totalDays++;}
+  }
+  const avgPct=totalDays>0?Math.round(totalDone/totalDays/NON_OPTIONAL*100):0;
+
+  let html='';
+
+  html+=`<div class="stat-row">`;
+  html+=`<div class="stat-card"><div class="stat-num" style="color:#ff9500">${streak}</div><div class="stat-label">Day streak</div></div>`;
+  html+=`<div class="stat-card"><div class="stat-num" style="color:#34c759">${totalDays}</div><div class="stat-label">Days tracked</div></div>`;
+  html+=`<div class="stat-card"><div class="stat-num" style="color:#007aff">${avgPct}%</div><div class="stat-label">Avg daily</div></div>`;
+  html+=`</div>`;
+
+  html+=`<div class="section-header">This week</div>`;
+  html+=`<div style="background:var(--card);border-radius:12px;margin:0 16px 16px;padding:14px 16px">`;
+  html+=`<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center">`;
+  const days=['S','M','T','W','T','F','S'];
+  const todayDow=today.getDay();
+  for(let i=6;i>=0;i--){
+    const d=new Date(today);d.setDate(d.getDate()-i);
+    const k=dateKey(d);
+    const day2=DATA[k]||{};
+    const done2=SUPPLEMENTS.filter(s=>!s.optional&&!s.weekly&&day2[s.id]).length;
+    const pct2=Math.round(done2/NON_OPTIONAL*100);
+    const isFuture=d>today;
+    const isToday=i===0;
+    let fillColor=isFuture?'transparent':pct2===100?'#34c759':pct2>=50?'#ff9500':'#e5e5ea';
+    let textColor=isFuture?'#c6c6c8':pct2>=50?'#fff':'var(--text3)';
+    let border=isFuture?'border:1.5px dashed #c6c6c8;border-radius:50%':'';
+    let outline=isToday?'outline:2px solid #007aff;border-radius:50%;':''
+    html+=`<div style="display:flex;flex-direction:column;align-items:center;gap:3px">`;
+    html+=`<span style="font-size:10px;font-weight:600;color:var(--text3)">${days[d.getDay()]}</span>`;
+    html+=`<div style="width:32px;height:32px;border-radius:50%;background:${isFuture?'transparent':fillColor};${border};${outline};display:flex;align-items:center;justify-content:center">`;
+    if(!isFuture) html+=`<span style="font-size:12px;font-weight:700;color:${textColor}">${d.getDate()}</span>`;
+    else html+=`<span style="font-size:12px;color:#c6c6c8">${d.getDate()}</span>`;
+    html+=`</div>`;
+    if(!isFuture) html+=`<span style="font-size:10px;color:var(--text3)">${pct2>0?pct2+'%':''}</span>`;
+    else html+=`<span style="font-size:10px;color:transparent">-</span>`;
+    html+=`</div>`;
+  }
+  html+=`</div></div>`;
+
+  html+=`<div class="section-header">Last 30 days</div>`;
+  html+=`<div style="background:var(--card);border-radius:12px;margin:0 16px 16px;padding:14px 16px">`;
+  html+=`<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px">`;
+  for(let i=29;i>=0;i--){
+    const d=new Date(today);d.setDate(d.getDate()-i);
+    const k=dateKey(d);
+    const day2=DATA[k]||{};
+    const done2=SUPPLEMENTS.filter(s=>!s.optional&&!s.weekly&&day2[s.id]).length;
+    const pct2=Math.round(done2/NON_OPTIONAL*100);
+    const isFuture=d>today;
+    const isToday=i===0;
+    let bg=isFuture?'transparent':pct2===100?'#34c759':pct2>=50?'#ff9500':done2>0?'#fcd34d':'var(--border2)';
+    let outline=isToday?'outline:2px solid #007aff;':''
+    let border=isFuture?'border:1px dashed var(--border);':'';
+    html+=`<div style="aspect-ratio:1;border-radius:5px;background:${bg};${outline};${border};display:flex;align-items:center;justify-content:center">`;
+    if(isToday) html+=`<span style="font-size:9px;font-weight:700;color:${pct2>60?'#fff':'#007aff'}">${d.getDate()}</span>`;
+    html+=`</div>`;
+  }
+  html+=`</div>`;
+  html+=`<div style="display:flex;gap:16px;margin-top:12px;flex-wrap:wrap">`;
+  const legend=[['#34c759','100%'],['#ff9500','50–99%'],['#fcd34d','1–49%'],['var(--border2)','0%']];
+  for(const [c,l] of legend){
+    html+=`<div style="display:flex;align-items:center;gap:5px"><div style="width:10px;height:10px;border-radius:2px;background:${c}"></div><span style="font-size:11px;color:var(--text3)">${l}</span></div>`;
+  }
+  html+=`</div></div>`;
+
+  const june15=new Date('2026-06-15');
+  const daysLeft=Math.max(0,Math.ceil((june15-today)/(1000*60*60*24)));
+  html+=`<div style="background:var(--card);border-radius:12px;margin:0 16px 16px;padding:14px 16px">`;
+  html+=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">`;
+  html+=`<span style="font-size:15px;font-weight:600;color:var(--text)">Next lab recheck</span>`;
+  html+=`<span style="font-size:22px;font-weight:700;color:#007aff">${daysLeft}d</span>`;
+  html+=`</div>`;
+  html+=`<div style="font-size:12px;color:var(--text3);margin-bottom:8px">June 15, 2026 — B12, LDL, HbA1c, ferritin (new), selenium, hemoglobin</div>`;
+  const totalWeeks=Math.ceil((june15-START_DATE)/(1000*60*60*24*7));
+  const weeksGone=Math.ceil((today-START_DATE)/(1000*60*60*24*7));
+  const planPct=Math.min(100,Math.round(weeksGone/totalWeeks*100));
+  html+=`<div class="pbar-bg"><div class="pbar-fill" style="width:${planPct}%"></div></div>`;
+  html+=`<div style="display:flex;justify-content:space-between;margin-top:6px"><span style="font-size:11px;color:var(--text3)">Mar 23</span><span style="font-size:11px;color:var(--text3)">Jun 15</span></div>`;
+  html+=`</div>`;
+
+  const june10=new Date('2026-06-10');
+  const stopNutrafol=Math.max(0,Math.ceil((june10-today)/(1000*60*60*24)));
+  if(stopNutrafol<=14){
+    html+=`<div class="banner" style="margin-bottom:16px;border-color:#fca5a5;background:#fff1f2"><div class="banner-icon" style="font-size:16px">!</div><div class="banner-text" style="color:#991b1b"><strong>Stop Nutrafol in ${stopNutrafol} days</strong> (Jun 10) — Biotin in Nutrafol skews TSH and B12 lab results. Stop 4+ days before your draw.</div></div>`;
+  }
+
+  document.getElementById('history-content').innerHTML=html;
+}
+
+function renderLabs(){
+  const labs=[
+    {name:'Vitamin B12',current:'267 pg/mL',target:'400+ pg/mL',unit:'pg/mL',cur:267,tgt:400,max:600,status:'above',sup:'Jarrow Methyl B-12 1,000 mcg daily',hint:'Expect improvement by month 2–3'},
+    {name:'LDL cholesterol',current:'117 mg/dL',target:'<100 mg/dL',unit:'mg/dL',cur:117,tgt:100,max:140,status:'above',sup:'Nordic Naturals Algae Omega-3 + dietary flaxseed + isabgol',hint:'Omega-3 + dietary changes — 6–8 week onset'},
+    {name:'HbA1c',current:'5.7%',target:'≤5.5%',unit:'%',cur:5.7,tgt:5.5,max:6.5,status:'above',sup:'Sugar Destroyer (add month 1-2) + dietary karela + methi',hint:'Hardest to shift — dietary consistency is key'},
+    {name:'Triglycerides',current:'105 mg/dL',target:'<90 mg/dL',unit:'mg/dL',cur:105,tgt:90,max:150,status:'above',sup:'Algae Omega-3 2 gels/day',hint:'Omega-3 most effective — 4–6 weeks'},
+    {name:'Selenium',current:'182.90 µg/L',target:'<160 µg/L',unit:'µg/L',cur:182.9,tgt:160,max:190,status:'above',sup:'Nutrafol reduced to 2 caps (100 mcg vs 200 mcg)',hint:'Should decrease with halved Nutrafol dose'},
+    {name:'Hemoglobin',current:'12.1 g/dL',target:'>12.5 g/dL',unit:'g/dL',cur:12.1,tgt:12.5,max:15,status:'watch',sup:'Dietary iron (ragi, palak, rajma) + amla + lemon',hint:'Add ferritin test at June draw — not yet tested'},
+    {name:'Vitamin D',current:'137.7 nmol/L',target:'75–250 nmol/L',unit:'nmol/L',cur:137.7,tgt:137.7,max:250,status:'ok',sup:'Rx Ergocalciferol 50,000 IU weekly — continue',hint:'Optimal. Continue current prescription.'},
+  ];
+
+  const today=new Date();
+  const june15=new Date('2026-06-15');
+  const daysLeft=Math.max(0,Math.ceil((june15-today)/(1000*60*60*24)));
+
+  let html=`<div style="background:var(--card);border-radius:12px;margin:16px 16px 8px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center">`;
+  html+=`<div><div style="font-size:22px;font-weight:700;color:#007aff">${daysLeft} days</div><div style="font-size:13px;color:var(--text3);margin-top:2px">until June 15 recheck</div></div>`;
+  html+=`<div style="text-align:right"><div style="font-size:13px;color:var(--text3)">Baseline</div><div style="font-size:13px;font-weight:500;color:var(--text)">Feb 2026</div></div>`;
+  html+=`</div>`;
+
+  html+=`<div class="section-header">Markers to watch</div>`;
+
+  for(const lab of labs){
+    const statusText = lab.status==='above'?'Above target':lab.status==='ok'?'On target':'Monitor';
+    const statusStyle = lab.status==='above'?'above':lab.status==='ok'?'ok':'watch';
+    let barWidth, barColor, targetLineLeft;
+    if(lab.name==='Hemoglobin'){
+      barWidth=Math.round((lab.cur-10)/(lab.max-10)*100);
+      targetLineLeft=Math.round((lab.tgt-10)/(lab.max-10)*100);
+      barColor = lab.cur<lab.tgt ? '#ff9500' : '#34c759';
+    } else if(lab.name==='Vitamin D'){
+      barWidth=Math.round((lab.cur-0)/(lab.max-0)*100);
+      targetLineLeft=Math.round(75/lab.max*100);
+      barColor='#34c759';
+    } else {
+      barWidth=Math.min(100,Math.round((lab.cur/lab.max)*100));
+      targetLineLeft=Math.min(100,Math.round((lab.tgt/lab.max)*100));
+      barColor = lab.cur>lab.tgt ? '#ff9500' : '#34c759';
+    }
+
+    html+=`<div class="lab-card">`;
+    html+=`<div class="lab-header">`;
+    html+=`<div class="lab-name">${lab.name}</div>`;
+    html+=`<div class="lab-status ${statusStyle}">${statusText}</div>`;
+    html+=`</div>`;
+    html+=`<div class="lab-vals">`;
+    html+=`<div class="lab-val">Now <span>${lab.current}</span></div>`;
+    html+=`<div class="lab-val">Target <span>${lab.target}</span></div>`;
+    html+=`</div>`;
+    html+=`<div class="lab-pbar-bg">`;
+    html+=`<div class="lab-pbar-fill" style="width:${barWidth}%;background:${barColor}"></div>`;
+    html+=`<div class="lab-target-line" style="left:${targetLineLeft}%"></div>`;
+    html+=`</div>`;
+    html+=`<div style="font-size:11px;color:var(--text3);margin-top:8px"><strong style="color:var(--text2)">Driver:</strong> ${lab.sup}</div>`;
+    html+=`<div style="font-size:11px;color:var(--text3);margin-top:3px">${lab.hint}</div>`;
+    html+=`</div>`;
+  }
+
+  html+=`<div class="section-header">Add to June panel</div>`;
+  html+=`<div class="card-group">`;
+  const newTests=['Serum ferritin (not yet tested — needed for iron/anemia evaluation)','24-hour urine selenium (confirm toxicity risk)','HbA1c (track from 5.7%)','B12 (track from 267 pg/mL)','Lipid panel — LDL, HDL, triglycerides','Hemoglobin + RBC indices (RDW was 15.5%)'];
+  for(const t of newTests){
+    html+=`<div class="card-row" style="cursor:default">`;
+    html+=`<div style="width:8px;height:8px;border-radius:50%;background:#007aff;flex-shrink:0;margin-left:4px"></div>`;
+    html+=`<div class="row-title" style="font-size:14px">${t}</div>`;
+    html+=`</div>`;
+  }
+  html+=`</div>`;
+
+  document.getElementById('labs-content').innerHTML=html;
+}
+
+function renderReminders(){
+  const schedule=[
+    {time:'7:00 AM', color:'#5856d6', items:[{name:'B12 sublingual 1,000 mcg',sub:'Dissolve under tongue before chai, empty stomach'}]},
+    {time:'7:30 AM', color:'#ff9500', items:[{name:'Nutrafol 2 capsules',sub:'With breakfast — needs food fat'},{name:'Shatavari 1 capsule',sub:'After breakfast — dose 1 of 3'}]},
+    {time:'11:00 AM', color:'#34c759', items:[{name:'Shatavari 1 capsule',sub:'After mid-morning snack — dose 2 of 3'}]},
+    {time:'3–4 PM', color:'#007aff', items:[{name:'Algae Omega-3 2 soft gels',sub:'Mid main meal — fat improves absorption'},{name:'Happy Caps 1 capsule',sub:'After main meal — daytime memory dose'},{name:'Shatavari 1 capsule',sub:'After main meal — dose 3 of 3'}]},
+    {time:'7:00 PM', color:'#ff9500', items:[{name:'GasEx 1 tablet',sub:'After evening meal — as needed for bloating'}]},
+    {time:'Bedtime', color:'#af52de', items:[{name:'Happy Caps 1 capsule',sub:'Before sleep — Skullcap + Passion Flower'},{name:'Magnesium glycinate 2 tablets',sub:'30–60 min before sleep — take alone'}]},
+    {time:'Weekly', color:'#ff9500', items:[{name:'Rx Vitamin D 50,000 IU',sub:'Same day each week with food (e.g., Sunday)'}]},
+  ];
+
+  let html=`<div class="section-header">Daily timing</div>`;
+  for(const slot of schedule){
+    html+=`<div class="reminder-card">`;
+    html+=`<div style="display:flex;align-items:center;gap:8px;min-width:75px">`;
+    html+=`<div style="width:3px;height:40px;border-radius:2px;background:${slot.color}"></div>`;
+    html+=`<div class="remind-time">${slot.time}</div>`;
+    html+=`</div>`;
+    html+=`<div class="remind-items">`;
+    for(const item of slot.items){
+      html+=`<div class="remind-name">${item.name}</div>`;
+      html+=`<div class="remind-sub">${item.sub}</div>`;
+      if(slot.items.indexOf(item)<slot.items.length-1) html+=`<div style="height:6px"></div>`;
+    }
+    html+=`</div></div>`;
+  }
+
+  html+=`<div class="section-header">Key rules</div>`;
+  html+=`<div class="card-group">`;
+  const rules=[
+    ['Stop Nutrafol 4 days before labs','Biotin skews TSH, B12, ferritin results — set a reminder now for 4 days before June 10'],
+    ['No multivitamin','Nutrafol already provides selenium, zinc, vitamins A, D, E — any multi would overdose selenium'],
+    ['No standalone ashwagandha','Nutrafol 2 caps already has 300 mg KSM-66 — the full clinical dose'],
+    ['Soy milk in chai and haldi doodh','Replaces oat milk — adds 10 g protein/day free with zero behaviour change'],
+    ['Tofu 100g in sabzi','4–5 days/week — press Sunday batch, cube and store — 10 g protein, safe for postmenopause'],
+    ['Egg whites ok now','2W+1Y omelette or 3 whites bhurji — whole eggs after June labs when LDL confirmed below 100'],
+  ];
+  for(const [title,sub] of rules){
+    html+=`<div class="card-row" style="cursor:default;align-items:flex-start">`;
+    html+=`<div style="width:6px;height:6px;border-radius:50%;background:#007aff;flex-shrink:0;margin-top:6px"></div>`;
+    html+=`<div class="row-content"><div class="row-title" style="font-size:14px">${title}</div><div class="row-sub">${sub}</div></div>`;
+    html+=`</div>`;
+  }
+  html+=`</div>`;
+
+  html+=`<div class="section-header">Upcoming adds</div>`;
+  html+=`<div class="card-group">`;
+  const adds=[
+    ['LifeSpa Sugar Destroyer','Month 1–2 — highest priority gap. Nothing yet addresses HbA1c 5.7%. Gymnema + Fenugreek + Cinnamon + Shilajit.'],
+    ['LifeSpa Triphala','Month 2 — replace GasEx for lasting gut function vs symptom relief.'],
+    ['Vitamin K2 MK-7 (Thorne)','After DEXA results — directs calcium to bones, not arteries. Postmenopause + Vit D synergy.'],
+    ['Whole eggs 3–4x/week','After June labs confirm LDL below 100 — excellent protein + choline for memory.'],
+  ];
+  for(const [title,sub] of adds){
+    html+=`<div class="card-row" style="cursor:default;align-items:flex-start">`;
+    html+=`<div style="width:6px;height:6px;border-radius:50%;background:#ff9500;flex-shrink:0;margin-top:6px"></div>`;
+    html+=`<div class="row-content"><div class="row-title" style="font-size:14px">${title}</div><div class="row-sub">${sub}</div></div>`;
+    html+=`</div>`;
+  }
+  html+=`</div>`;
+
+  document.getElementById('reminders-content').innerHTML=html;
+}
+
+function switchTab(name){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('screen-'+name).classList.add('active');
+  document.getElementById('tab-'+name).classList.add('active');
+  if(name==='history') renderHistory();
+  if(name==='labs') renderLabs();
+  if(name==='reminders') renderReminders();
+}
+
+async function init(){
+  updateCloudUI();
+  if(cloudReady()){
+    try{
+      await syncFromCloud();
+    }catch(e){
+      console.error(e);
+      updateCloudUI('Cloud settings saved, but sync failed. Check your Supabase setup.');
+    }
+  }
+  await preloadRecent();
+  await renderToday();
+  renderLabs();
+  renderReminders();
+}
+
+init();
+</script>
+</body>
+</html>
